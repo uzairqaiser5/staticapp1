@@ -9,11 +9,46 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+variables:
+- group: 'New variable group 20-Sep'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+
+- stage: Build
+  displayName: 'Build Stage'
+
+  jobs:
+  - job: Build
+    displayName: 'Build Static Website'
+
+    steps:
+    - checkout: self
+
+    - script: |
+        echo "Starting build..."
+        echo "Checking website files..."
+        ls -la
+      displayName: 'Build Static Website'
+
+
+- stage: Deploy
+  displayName: 'Deploy Stage'
+
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy to Azure Static Web App'
+
+    steps:
+    - checkout: self
+
+    - task: AzureStaticWebApp@0
+      displayName: 'Deploy to Azure Static Web App'
+      inputs:
+        app_location: '/'
+        output_location: ''
+        skip_app_build: true
+        skip_api_build: true
+        azure_static_web_apps_api_token: $(AZURE_STATIC_WEB_APPS_API_TOKEN)
